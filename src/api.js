@@ -140,7 +140,13 @@ async function transformText(selection, apiKey, systemPrompt, userPromptTemplate
 }
 
 export async function formatMarkdown(selection, apiKey) {
-  return transformText(selection, apiKey, SYSTEM_PROMPT, USER_PROMPT_TEMPLATE);
+  const result = await transformText(selection, apiKey, SYSTEM_PROMPT, USER_PROMPT_TEMPLATE);
+  const before = String(selection || "").replace(/\r\n/g, "\n").trim();
+  const after = String(result || "").replace(/\r\n/g, "\n").trim();
+  if (before === after) {
+    throw new Error("DeepSeek 没有产生任何 Markdown 排版变化，原文保持不变。 ");
+  }
+  return result;
 }
 
 export async function cleanLightly(selection, apiKey) {

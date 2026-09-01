@@ -87,6 +87,7 @@ Minimal DeepSeek-powered Markdown formatter for Typora: select text, press one s
 
 ## 更新记录
 
+- 1.1.1：修复原样返回仍显示成功的问题，并强化已有标题、章节标签和编号项的最小格式化要求。
 - 1.1.0：增加独立的轻度清理功能与改动幅度安全阈值，原有保守排版功能不变。
 - 1.0.2：改为保守排版模式，严格保留原文，只添加必要的标题、少量加粗和空行；禁止创造小标题、拆分句内枚举或补写占位内容。
 - 1.0.1：改用 `File.editor.insertText` 写回选区，修复 Typora 1.10.x 在插入标题、列表等块级 Markdown 后触发 `detect data lost` 的错误，并保留原生撤销记录。
