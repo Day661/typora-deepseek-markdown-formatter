@@ -1,0 +1,12 @@
+{
+  "id": "liuyi.deepseek-markdown-formatter",
+  "name": "DeepSeek Markdown 智能排版",
+  "description": "选中文本后由 DeepSeek 自动整理为 Markdown，并原地覆盖；支持 Ctrl+Z 撤销。",
+  "author": "Day661",
+  "authorUrl": "https://github.com/Day661",
+  "repo": "Day661/typora-deepseek-markdown-formatter",
+  "version": "1.0.1",
+  "minAppVersion": "1.5.0",
+  "minCoreVersion": "2.7.1",
+  "platforms": ["win32"]
+}

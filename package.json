@@ -1,0 +1,7 @@
+{
+  "name": "typora-markdown-formatter-deepseek",
+  "version": "1.0.1",
+  "type": "module",
+  "private": true,
+  "description": "Minimal DeepSeek Markdown formatter for Typora Community Plugin"
+}

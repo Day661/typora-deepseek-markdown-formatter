@@ -1,0 +1,13 @@
+# Changelog
+
+## 1.0.1 - 2026-09-01
+
+- 使用 Typora 原生 `File.editor.insertText` 接口写回选区。
+- 修复 Typora 1.10.x 插入标题、列表等块级 Markdown 后触发 `detect data lost` 的错误。
+- 保留 Typora 原生 `Ctrl+Z` 撤销行为。
+
+## 1.0.0 - 2026-09-01
+
+- 首个公开版本。
+- 支持 DeepSeek 官方 API、固定 Markdown 排版 Prompt、快捷键和右键菜单。
+- 自动覆盖选区，不提供 OCR、图片问答、通用聊天或 Prompt 自定义。
