@@ -11,6 +11,7 @@ Minimal DeepSeek-powered Markdown formatter for Typora: select text, press one s
 - 固定使用 DeepSeek 官方 API，不需要 OpenAI API Key。
 - 只保留 Markdown 排版，不包含 OCR、图片识别、问答或自定义 Prompt。
 - 快捷键：`Ctrl+Alt+M`。
+- 独立轻度清理：`Ctrl+Alt+L`，处理极确定的小问题并轻微顺句，同时保留自然口语和个人感受。
 - 也可以选中文字后右键选择“DeepSeek Markdown 智能排版”。
 - 生成完成后自动覆盖选区，不弹出预览窗口。
 - 覆盖作为一次编辑写入 Typora，完成后可立即按 `Ctrl+Z` 恢复原文。
@@ -60,6 +61,8 @@ Minimal DeepSeek-powered Markdown formatter for Typora: select text, press one s
 3. 等待提示“排版完成”。结果会直接覆盖原选区。
 4. 如果不满意，立即按一次 `Ctrl+Z` 恢复原文。
 
+如需轻度清理而不改变 Markdown 结构，选中文字后按 `Ctrl+Alt+L`，或从右键菜单选择“DeepSeek 轻度清理”。它会清理极确定的错字、填充音和口误重复，并只在原意完全明确时轻微顺句。“呢、啊、那个、就是”等可能有语气或语义作用的词，以及“我觉得、有点、其实、可能”等主观表达，默认保留；拿不准时不动。
+
 建议第一次只选中一小段测试，确认效果和撤销行为符合预期后再处理长文本。
 
 ## 卸载与回滚
@@ -84,6 +87,7 @@ Minimal DeepSeek-powered Markdown formatter for Typora: select text, press one s
 
 ## 更新记录
 
+- 1.1.0：增加独立的轻度清理功能与改动幅度安全阈值，原有保守排版功能不变。
 - 1.0.2：改为保守排版模式，严格保留原文，只添加必要的标题、少量加粗和空行；禁止创造小标题、拆分句内枚举或补写占位内容。
 - 1.0.1：改用 `File.editor.insertText` 写回选区，修复 Typora 1.10.x 在插入标题、列表等块级 Markdown 后触发 `detect data lost` 的错误，并保留原生撤销记录。
 - 1.0.0：首个精简版本。

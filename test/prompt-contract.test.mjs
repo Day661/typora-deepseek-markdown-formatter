@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 
 import {
+  CLEANUP_SYSTEM_PROMPT,
+  CLEANUP_USER_PROMPT_TEMPLATE,
   SYSTEM_PROMPT,
   USER_PROMPT_TEMPLATE,
 } from "../src/config.js";
@@ -32,5 +34,28 @@ assert.ok(userPrompt.includes("<source>"));
 assert.ok(userPrompt.includes("地点：地板，角落，阳台"));
 assert.ok(userPrompt.includes("\n1\n2\n3\n"));
 assert.equal((USER_PROMPT_TEMPLATE.match(/\{selection\}/g) || []).length, 1);
+
+const requiredCleanupRules = [
+  "极度克制",
+  "置信度极高",
+  "孤立的口头停顿词",
+  "句尾语气词",
+  "完整保留作者本人的口语感、情绪、犹豫和表达习惯",
+  "一处很小的语序、搭配或连接调整",
+  "不得改成标准书面语",
+  "我觉得、有点、其实、可能、好像、比较、然后、但是、所以",
+  "不得把鲜活的个人表达改成中性陈述",
+  "宁可漏改，也不要多改",
+  "禁止大范围润色、重写",
+  "已有 Markdown 标记",
+];
+
+for (const rule of requiredCleanupRules) {
+  assert.ok(CLEANUP_SYSTEM_PROMPT.includes(rule), `缺少轻度清理约束：${rule}`);
+}
+
+assert.ok(CLEANUP_USER_PROMPT_TEMPLATE.includes("轻度、轻度、轻度"));
+assert.ok(CLEANUP_USER_PROMPT_TEMPLATE.includes("口语感、个人感受和表达习惯"));
+assert.equal((CLEANUP_USER_PROMPT_TEMPLATE.match(/\{selection\}/g) || []).length, 1);
 
 console.log("Prompt contract checks passed.");

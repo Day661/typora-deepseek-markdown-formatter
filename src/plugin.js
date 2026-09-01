@@ -1,7 +1,12 @@
 const { Plugin, PluginSettings } = window[Symbol.for("typora-plugin-core@v2")];
 
-import { abortFormatting, formatMarkdown } from "./api.js";
-import { DEFAULT_SETTINGS, matchesFormatShortcut, mergeSettings } from "./config.js";
+import { abortFormatting, cleanLightly, formatMarkdown } from "./api.js";
+import {
+  DEFAULT_SETTINGS,
+  matchesCleanupShortcut,
+  matchesFormatShortcut,
+  mergeSettings,
+} from "./config.js";
 import { EditorSelectionController } from "./editor.js";
 import { DeepSeekMarkdownSettingTab } from "./settings-tab.js";
 import {
@@ -51,14 +56,18 @@ export default class DeepSeekMarkdownFormatterPlugin extends Plugin {
   }
 
   handleKeyDown(event) {
-    if (!this.selection.isEditorTarget(event.target) || !matchesFormatShortcut(event)) return;
+    if (!this.selection.isEditorTarget(event.target)) return;
+    const mode = matchesFormatShortcut(event)
+      ? "format"
+      : (matchesCleanupShortcut(event) ? "cleanup" : null);
+    if (!mode) return;
     event.preventDefault();
     event.stopPropagation();
     if (!this.selection.captureSelection()) {
-      showToast("请先选中需要排版的文字。", "error");
+      showToast(mode === "cleanup" ? "请先选中需要轻度清理的文字。" : "请先选中需要排版的文字。", "error");
       return;
     }
-    this.runFormatter();
+    this.runTransform(mode);
   }
 
   handleContextMenu(event) {
@@ -94,12 +103,17 @@ export default class DeepSeekMarkdownFormatterPlugin extends Plugin {
           value: "format",
         },
         {
+          label: "DeepSeek 轻度清理",
+          description: "清理明显小问题，轻微顺句并保留口语感",
+          value: "cleanup",
+        },
+        {
           label: "打开 Typora 原右键菜单",
           value: "native",
         },
       ],
       onSelect: (value) => {
-        if (value === "format") this.runFormatter();
+        if (value === "format" || value === "cleanup") this.runTransform(value);
         if (value === "native") this.openNativeContextMenu(nativeEvent);
       },
     });
@@ -127,15 +141,16 @@ export default class DeepSeekMarkdownFormatterPlugin extends Plugin {
     window.setTimeout(() => { this.bypassNextContextMenu = false; }, 0);
   }
 
-  async runFormatter() {
+  async runTransform(mode = "format") {
+    const isCleanup = mode === "cleanup";
     if (this.busy) {
-      showToast("正在排版，请稍候。", "info");
+      showToast("正在处理，请稍候。", "info");
       return;
     }
 
     const source = this.selection.getSavedText();
     if (!source.trim()) {
-      showToast("请先选中需要排版的文字。", "error");
+      showToast(isCleanup ? "请先选中需要轻度清理的文字。" : "请先选中需要排版的文字。", "error");
       return;
     }
 
@@ -146,17 +161,25 @@ export default class DeepSeekMarkdownFormatterPlugin extends Plugin {
     }
 
     this.busy = true;
-    showToast("DeepSeek 正在整理 Markdown…", "info", 0);
+    showToast(isCleanup ? "DeepSeek 正在轻度清理和顺句…" : "DeepSeek 正在整理 Markdown…", "info", 0);
     try {
-      const result = await formatMarkdown(source, apiKey);
+      const result = isCleanup
+        ? await cleanLightly(source, apiKey)
+        : await formatMarkdown(source, apiKey);
       const replaced = this.selection.restoreAndReplace(result);
       if (!replaced) throw new Error("无法恢复原选区；请重新选择文字后再试。 ");
-      showToast("排版完成；不满意可立即按 Ctrl+Z 撤销。", "success", 5000);
+      showToast(
+        isCleanup
+          ? "轻度清理完成；不满意可立即按 Ctrl+Z 撤销。"
+          : "排版完成；不满意可立即按 Ctrl+Z 撤销。",
+        "success",
+        5000,
+      );
     } catch (error) {
       this.selection.clear();
       const message = error?.name === "AbortError"
-        ? "排版已取消。"
-        : (error?.message || "排版失败。 ");
+        ? "处理已取消。"
+        : (error?.message || "处理失败。 ");
       showToast(message, error?.name === "AbortError" ? "info" : "error", 6000);
     } finally {
       this.busy = false;

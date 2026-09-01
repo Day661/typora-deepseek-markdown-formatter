@@ -39,7 +39,7 @@ export class DeepSeekMarkdownSettingTab extends SettingTab {
           固定使用 DeepSeek 官方接口和 deepseek-v4-flash 非思考模式。Key 保存在本机的社区插件配置中，只会随排版请求发送给 DeepSeek。
         </div>
         <div class="deepseek-md-setting-note">
-          使用方法：在 Typora 选中文字后按 Ctrl+Alt+M，或右键选择“DeepSeek Markdown 智能排版”。结果会直接覆盖选区；不满意可立即按 Ctrl+Z 撤销。
+          纯排版：选中文字后按 Ctrl+Alt+M。轻度清理：按 Ctrl+Alt+L，清理极确定的小问题并轻微顺句，同时保留自然口语和个人感受。两项功能也都可从右键菜单使用；结果会直接覆盖选区，不满意可立即按 Ctrl+Z 撤销。
         </div>
         <div><button class="deepseek-md-button" id="deepseek-md-save">保存</button></div>
       </div>

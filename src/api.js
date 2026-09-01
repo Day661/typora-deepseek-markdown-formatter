@@ -1,4 +1,6 @@
 import {
+  CLEANUP_SYSTEM_PROMPT,
+  CLEANUP_USER_PROMPT_TEMPLATE,
   DEEPSEEK_API_URL,
   DEEPSEEK_MODEL,
   SYSTEM_PROMPT,
@@ -20,7 +22,70 @@ function stripOuterCodeFence(value) {
   return match ? match[1].trim() : text;
 }
 
-export async function formatMarkdown(selection, apiKey) {
+function characterBigramSimilarity(left, right) {
+  const a = Array.from(String(left || "").replace(/\s+/g, ""));
+  const b = Array.from(String(right || "").replace(/\s+/g, ""));
+  if (a.length < 2 || b.length < 2) return a.join("") === b.join("") ? 1 : 0;
+
+  const counts = new Map();
+  for (let index = 0; index < a.length - 1; index += 1) {
+    const pair = `${a[index]}\u0000${a[index + 1]}`;
+    counts.set(pair, (counts.get(pair) || 0) + 1);
+  }
+
+  let overlap = 0;
+  for (let index = 0; index < b.length - 1; index += 1) {
+    const pair = `${b[index]}\u0000${b[index + 1]}`;
+    const available = counts.get(pair) || 0;
+    if (available > 0) {
+      overlap += 1;
+      counts.set(pair, available - 1);
+    }
+  }
+  return (2 * overlap) / ((a.length - 1) + (b.length - 1));
+}
+
+function editDistance(left, right) {
+  const a = Array.from(String(left || ""));
+  const b = Array.from(String(right || ""));
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+
+  for (let row = 1; row <= a.length; row += 1) {
+    const current = [row];
+    for (let column = 1; column <= b.length; column += 1) {
+      current[column] = Math.min(
+        current[column - 1] + 1,
+        previous[column] + 1,
+        previous[column - 1] + (a[row - 1] === b[column - 1] ? 0 : 1),
+      );
+    }
+    previous = current;
+  }
+  return previous[b.length];
+}
+
+export function assertLightCleanup(source, result) {
+  const before = String(source || "");
+  const after = String(result || "");
+  const maxDeletion = Math.max(12, Math.ceil(before.length * 0.15));
+  const maxAddition = Math.max(6, Math.ceil(before.length * 0.05));
+  const deleted = Math.max(0, before.length - after.length);
+  const added = Math.max(0, after.length - before.length);
+  const similarity = characterBigramSimilarity(before, after);
+  const compactBefore = before.replace(/\s+/g, "");
+  const compactAfter = after.replace(/\s+/g, "");
+  const shortTextChangedTooMuch = Math.max(compactBefore.length, compactAfter.length) <= 40
+    && editDistance(compactBefore, compactAfter) > Math.max(5, Math.ceil(compactBefore.length * 0.25));
+  const longTextChangedTooMuch = Math.max(compactBefore.length, compactAfter.length) > 40
+    && similarity < 0.78;
+
+  if (!after.trim() || deleted > maxDeletion || added > maxAddition || shortTextChangedTooMuch || longTextChangedTooMuch) {
+    throw new Error("轻度清理检测到改动可能过多，已停止覆盖原文。 ");
+  }
+  return after;
+}
+
+async function transformText(selection, apiKey, systemPrompt, userPromptTemplate) {
   if (!String(apiKey || "").trim()) {
     throw new Error("尚未设置 DeepSeek API Key。请按 Ctrl+. 打开插件设置。 ");
   }
@@ -39,10 +104,10 @@ export async function formatMarkdown(selection, apiKey) {
         thinking: { type: "disabled" },
         stream: false,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           {
             role: "user",
-            content: USER_PROMPT_TEMPLATE.replace("{selection}", selection),
+            content: userPromptTemplate.replace("{selection}", selection),
           },
         ],
       }),
@@ -72,4 +137,18 @@ export async function formatMarkdown(selection, apiKey) {
   } finally {
     activeController = null;
   }
+}
+
+export async function formatMarkdown(selection, apiKey) {
+  return transformText(selection, apiKey, SYSTEM_PROMPT, USER_PROMPT_TEMPLATE);
+}
+
+export async function cleanLightly(selection, apiKey) {
+  const result = await transformText(
+    selection,
+    apiKey,
+    CLEANUP_SYSTEM_PROMPT,
+    CLEANUP_USER_PROMPT_TEMPLATE,
+  );
+  return assertLightCleanup(selection, result);
 }
