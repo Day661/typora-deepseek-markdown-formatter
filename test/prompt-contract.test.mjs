@@ -9,20 +9,25 @@ import {
 
 const requiredRules = [
   "不可改写的数据",
-  "每段内容必须恰好保留一次",
-  "不得复制前文来填充后文",
+  "每项事实必须恰好保留一次",
+  "不得重复前文或填充空缺内容",
   "不得改名、缩写、扩写",
   "禁止根据段落含义创造",
   "句子内部",
   "禁止拆成多个项目符号",
   "视为占位符",
   "禁止推测、补全",
-  "选择不添加格式",
+  "采用中等格式密度",
   "符合以下条件时必须执行",
   "第一非空行",
   "独立成行且作为章节标签",
   "行首为连续编号",
   "同一行开头的短标签",
+  "至少有 3 个同类对象",
+  "重复出现至少 2 个相同属性",
+  "如果原文先列出带编号的对象名称",
+  "原文缺失的字段保持空白单元格",
+  "不得为了表格简洁而概括、缩写或润色",
 ];
 
 for (const rule of requiredRules) {
@@ -34,7 +39,8 @@ const userPrompt = USER_PROMPT_TEMPLATE.replace(
   "标题：\n\n地点：地板，角落，阳台\n\n1\n2\n3",
 );
 
-assert.ok(userPrompt.includes("最小干预、原文零改写"));
+assert.ok(userPrompt.includes("中等结构化、内容零改写"));
+assert.ok(userPrompt.includes("优先使用 Markdown 表格"));
 assert.ok(userPrompt.includes("<source>"));
 assert.ok(userPrompt.includes("地点：地板，角落，阳台"));
 assert.ok(userPrompt.includes("\n1\n2\n3\n"));
@@ -53,6 +59,10 @@ const requiredCleanupRules = [
   "宁可漏改，也不要多改",
   "禁止大范围润色、重写",
   "已有 Markdown 标记",
+  "紧邻上下文能唯一确定",
+  "只补最短必要文字",
+  "中文本来就自然省略主语的句子不得强行补全",
+  "提纲占位、空白编号和待补内容绝对不得补写",
 ];
 
 for (const rule of requiredCleanupRules) {
@@ -61,6 +71,7 @@ for (const rule of requiredCleanupRules) {
 
 assert.ok(CLEANUP_USER_PROMPT_TEMPLATE.includes("轻度、轻度、轻度"));
 assert.ok(CLEANUP_USER_PROMPT_TEMPLATE.includes("口语感、个人感受和表达习惯"));
+assert.ok(CLEANUP_USER_PROMPT_TEMPLATE.includes("补最短的遗漏成分"));
 assert.equal((CLEANUP_USER_PROMPT_TEMPLATE.match(/\{selection\}/g) || []).length, 1);
 
 console.log("Prompt contract checks passed.");

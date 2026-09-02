@@ -99,7 +99,7 @@ export default class DeepSeekMarkdownFormatterPlugin extends Plugin {
       items: [
         {
           label: "DeepSeek Markdown 智能排版",
-          description: "立即排版并直接覆盖选中的原文",
+          description: "中等结构化排版，支持标题、列表和比较表格",
           value: "format",
         },
         {
