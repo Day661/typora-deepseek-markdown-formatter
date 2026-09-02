@@ -96,6 +96,7 @@ Minimal DeepSeek-powered Markdown formatter for Typora: select text, press one s
 
 ## 更新记录
 
+- 1.2.3：修复 Windows Typora 原生 Markdown 选区读取，轻度清理不再退回纯文本；读取失败时保持原文，并固定每次发布只保留最新版本。
 - 1.2.2：轻度清理改用 Typora 原生选区 Markdown，并锁定已有格式与换行；智能排版仍允许重新组织格式。
 - 1.2.1：检测选区已有格式并阻止再次处理，避免覆盖用户后续添加的手工样式。
 - 1.2.0：中等结构化排版增加严格触发的 Markdown 表格；轻度清理允许补全唯一明确的最短遗漏成分。
@@ -104,3 +105,7 @@ Minimal DeepSeek-powered Markdown formatter for Typora: select text, press one s
 - 1.0.2：改为保守排版模式，严格保留原文，只添加必要的标题、少量加粗和空行；禁止创造小标题、拆分句内枚举或补写占位内容。
 - 1.0.1：改用 `File.editor.insertText` 写回选区，修复 Typora 1.10.x 在插入标题、列表等块级 Markdown 后触发 `detect data lost` 的错误，并保留原生撤销记录。
 - 1.0.0：首个精简版本。
+
+## 维护者发布规则
+
+每次新版本 Release 创建并确认可下载后，运行 `scripts/keep-latest-release.ps1 -KeepTag vX.Y.Z`。脚本会先确认新版存在，再删除其他公开 Release 和远程版本标签，并复核最终只剩指定的最新版本；因此项目公开下载页始终只保留最新版。

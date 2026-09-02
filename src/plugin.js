@@ -154,7 +154,13 @@ export default class DeepSeekMarkdownFormatterPlugin extends Plugin {
       ? this.selection.getSavedMarkdown()
       : this.selection.getSavedText();
     if (!source.trim()) {
-      showToast(isCleanup ? "请先选中需要轻度清理的文字。" : "请先选中需要排版的文字。", "error");
+      showToast(
+        isCleanup
+          ? "无法读取选区的原始 Markdown；为避免破坏已有格式，本次未处理。"
+          : "请先选中需要排版的文字。",
+        "error",
+        isCleanup ? 6000 : 2600,
+      );
       return;
     }
 

@@ -22,7 +22,7 @@ export class EditorSelectionController {
     }
     this.savedRange = selection.getRangeAt(0).cloneRange();
     this.savedText = selection.toString();
-    this.savedMarkdown = this.captureSelectedMarkdown() || this.savedText;
+    this.savedMarkdown = this.captureSelectedMarkdown();
     return true;
   }
 
@@ -42,11 +42,18 @@ export class EditorSelectionController {
       preventDefault() {},
     };
 
+    const previousCopyFlag = globalThis.File._CopyContentFlag;
     try {
+      // Windows 版 Typora 的 copyAsMarkdown 是两阶段流程：没有标记时只会
+      // 触发系统 copy 并提前返回。预置同名标记可直接进入实际写入阶段，
+      // 从 fake clipboardData 取得 Markdown，同时不改动用户剪贴板。
+      globalThis.File._CopyContentFlag = "copyAsMarkdown";
       copyAsMarkdown.call(typoraEditor.UserOp, typoraEditor, copyEvent);
       return clipboard["text/plain"] || "";
     } catch (_) {
       return "";
+    } finally {
+      globalThis.File._CopyContentFlag = previousCopyFlag;
     }
   }
 
@@ -55,7 +62,7 @@ export class EditorSelectionController {
   }
 
   getSavedMarkdown() {
-    return this.savedMarkdown || this.savedText || "";
+    return this.savedMarkdown || "";
   }
 
   restoreAndReplace(nextText) {
