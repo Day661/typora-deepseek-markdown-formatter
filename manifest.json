@@ -1,11 +1,11 @@
 {
   "id": "liuyi.deepseek-markdown-formatter",
   "name": "DeepSeek Markdown 智能排版",
-  "description": "选中文本后由 DeepSeek 结构化排版或轻度清理；检测已有手工格式以防误覆盖。",
+  "description": "DeepSeek 结构化排版与保留手工格式的轻度清理，并支持 Typora 原生撤销。",
   "author": "Day661",
   "authorUrl": "https://github.com/Day661",
   "repo": "Day661/typora-deepseek-markdown-formatter",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "minAppVersion": "1.5.0",
   "minCoreVersion": "2.7.1",
   "platforms": ["win32"]

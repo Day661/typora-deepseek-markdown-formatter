@@ -1,10 +1,10 @@
 {
   "name": "typora-markdown-formatter-deepseek",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "type": "module",
   "private": true,
   "description": "Minimal DeepSeek Markdown formatter for Typora Community Plugin",
   "scripts": {
-    "test": "node test/prompt-contract.test.mjs && node test/cleanup-safety.test.mjs && node test/format-noop.test.mjs && node test/format-protection.test.mjs"
+    "test": "node test/prompt-contract.test.mjs && node test/cleanup-safety.test.mjs && node test/cleanup-format-preservation.test.mjs && node test/editor-markdown-selection.test.mjs && node test/plugin-mode-source.test.mjs && node test/format-noop.test.mjs"
   }
 }

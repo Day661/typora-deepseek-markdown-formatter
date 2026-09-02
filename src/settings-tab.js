@@ -42,7 +42,7 @@ export class DeepSeekMarkdownSettingTab extends SettingTab {
           中等结构化排版：选中文字后按 Ctrl+Alt+M，明确的多对象比较内容会优先使用表格。轻度清理：按 Ctrl+Alt+L，清理极确定的小问题、轻微顺句，并只在上下文唯一明确时补最短遗漏成分。两项功能也都可从右键菜单使用；结果会直接覆盖选区，不满意可立即按 Ctrl+Z 撤销。
         </div>
         <div class="deepseek-md-setting-note">
-          格式保护：如果选区已经包含加粗、高亮、字体颜色、链接、标题、列表或表格，插件会取消本次处理并提示原因，避免整段替换时覆盖手工格式。推荐顺序：先轻度清理，再结构化排版，最后添加高亮、颜色等手工样式。
+          使用场景说明：轻度清理会通过 Typora 原生 Markdown 保留已有高亮、加粗、字体颜色、标题、列表和换行；模型未能完整保留格式标记时不会覆盖原文。智能排版会重新组织标题、列表和表格，二次使用可能覆盖手工样式；如结果不合适，请立即按 Ctrl+Z 撤销。推荐先完成智能排版，再添加手工样式，之后只用轻度清理修改文字。
         </div>
         <div><button class="deepseek-md-button" id="deepseek-md-save">保存</button></div>
       </div>

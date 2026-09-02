@@ -1,94 +1,8 @@
-const PROTECTED_FORMAT_ORDER = [
-  "加粗",
-  "斜体",
-  "高亮",
-  "字体颜色",
-  "字体样式",
-  "下划线",
-  "删除线",
-  "链接",
-  "代码",
-  "标题",
-  "列表",
-  "表格",
-  "引用",
-  "图片",
-];
-
-function hasHtmlTag(html, names) {
-  return new RegExp(`<\\/?(?:${names})\\b`, "i").test(html);
-}
-
-export function findProtectedFormattingInHtml(value) {
-  const html = String(value || "");
-  const found = new Set();
-
-  if (hasHtmlTag(html, "strong|b")) found.add("加粗");
-  if (hasHtmlTag(html, "em|i")) found.add("斜体");
-  if (hasHtmlTag(html, "mark")) found.add("高亮");
-  if (hasHtmlTag(html, "font")) found.add("字体样式");
-  if (/<font\b[^>]*\bcolor\s*=/i.test(html)) found.add("字体颜色");
-  if (hasHtmlTag(html, "u")) found.add("下划线");
-  if (hasHtmlTag(html, "del|s|strike")) found.add("删除线");
-  if (hasHtmlTag(html, "a")) found.add("链接");
-  if (hasHtmlTag(html, "code|pre")) found.add("代码");
-  if (hasHtmlTag(html, "h[1-6]")) found.add("标题");
-  if (hasHtmlTag(html, "ul|ol|li")) found.add("列表");
-  if (hasHtmlTag(html, "table|thead|tbody|tfoot|tr|th|td")) found.add("表格");
-  if (hasHtmlTag(html, "blockquote")) found.add("引用");
-  if (hasHtmlTag(html, "img")) found.add("图片");
-
-  const stylePattern = /\bstyle\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi;
-  for (const match of html.matchAll(stylePattern)) {
-    const style = match[1] || match[2] || match[3] || "";
-    if (/(^|;)\s*background(?:-color)?\s*:/i.test(style)) found.add("高亮");
-    if (/(^|;)\s*color\s*:/i.test(style)) found.add("字体颜色");
-    if (/(^|;)\s*font-weight\s*:\s*(?:bold|[6-9]00)/i.test(style)) found.add("加粗");
-    if (/(^|;)\s*font-style\s*:\s*italic/i.test(style)) found.add("斜体");
-    if (/(^|;)\s*text-decoration[^:]*:\s*[^;]*underline/i.test(style)) found.add("下划线");
-    if (/(^|;)\s*font-(?:family|size)\s*:/i.test(style)) found.add("字体样式");
-  }
-
-  return PROTECTED_FORMAT_ORDER.filter((name) => found.has(name));
-}
-
-function boundaryElementMarkup(node) {
-  const snippets = [];
-  let element = node?.nodeType === 1 ? node : node?.parentElement;
-  while (element && !element.matches?.("#write, .CodeMirror")) {
-    const tag = String(element.tagName || "").toLowerCase();
-    const style = element.getAttribute?.("style") || "";
-    const color = element.getAttribute?.("color") || "";
-    if (tag) snippets.push(`<${tag} style="${style}" color="${color}">`);
-    element = element.parentElement;
-  }
-  return snippets.join("");
-}
-
-function findProtectedFormattingInRange(range) {
-  const snippets = [
-    boundaryElementMarkup(range?.startContainer),
-    boundaryElementMarkup(range?.endContainer),
-  ];
-
-  try {
-    if (range?.cloneContents && typeof document?.createElement === "function") {
-      const wrapper = document.createElement("div");
-      wrapper.appendChild(range.cloneContents());
-      snippets.push(wrapper.innerHTML || "");
-    }
-  } catch (_) {
-    // 检测失败时不阻塞普通文本处理；写回仍由 Typora 原生接口完成。
-  }
-
-  return findProtectedFormattingInHtml(snippets.join(""));
-}
-
 export class EditorSelectionController {
   constructor() {
     this.savedRange = null;
     this.savedText = "";
-    this.savedProtectedFormatting = [];
+    this.savedMarkdown = "";
   }
 
   isEditorTarget(node) {
@@ -108,16 +22,40 @@ export class EditorSelectionController {
     }
     this.savedRange = selection.getRangeAt(0).cloneRange();
     this.savedText = selection.toString();
-    this.savedProtectedFormatting = findProtectedFormattingInRange(this.savedRange);
+    this.savedMarkdown = this.captureSelectedMarkdown() || this.savedText;
     return true;
+  }
+
+  captureSelectedMarkdown() {
+    const typoraEditor = globalThis.File?.editor;
+    const copyAsMarkdown = typoraEditor?.UserOp?.copyAsMarkdown;
+    if (typeof copyAsMarkdown !== "function") return "";
+
+    const clipboard = {};
+    const copyEvent = {
+      type: "copy",
+      clipboardData: {
+        setData(type, value) {
+          clipboard[type] = String(value ?? "");
+        },
+      },
+      preventDefault() {},
+    };
+
+    try {
+      copyAsMarkdown.call(typoraEditor.UserOp, typoraEditor, copyEvent);
+      return clipboard["text/plain"] || "";
+    } catch (_) {
+      return "";
+    }
   }
 
   getSavedText() {
     return this.savedText || "";
   }
 
-  getSavedProtectedFormatting() {
-    return [...this.savedProtectedFormatting];
+  getSavedMarkdown() {
+    return this.savedMarkdown || this.savedText || "";
   }
 
   restoreAndReplace(nextText) {
@@ -149,6 +87,6 @@ export class EditorSelectionController {
   clear() {
     this.savedRange = null;
     this.savedText = "";
-    this.savedProtectedFormatting = [];
+    this.savedMarkdown = "";
   }
 }

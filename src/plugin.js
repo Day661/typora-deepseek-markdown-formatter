@@ -148,21 +148,13 @@ export default class DeepSeekMarkdownFormatterPlugin extends Plugin {
       return;
     }
 
-    const source = this.selection.getSavedText();
+    // 轻度清理使用 Typora 原生导出的选区 Markdown，以保留已有手工格式；
+    // 智能排版仍使用可见纯文本，允许重新组织标题、列表和表格。
+    const source = isCleanup
+      ? this.selection.getSavedMarkdown()
+      : this.selection.getSavedText();
     if (!source.trim()) {
       showToast(isCleanup ? "请先选中需要轻度清理的文字。" : "请先选中需要排版的文字。", "error");
-      return;
-    }
-
-    const protectedFormatting = this.selection.getSavedProtectedFormatting();
-    if (protectedFormatting.length) {
-      const summary = protectedFormatting.slice(0, 5).join("、");
-      this.selection.clear();
-      showToast(
-        `已取消：选区包含已有格式（${summary}）。重新处理会覆盖这些格式；请先在原始文本上完成清理和排版，再做手工格式。`,
-        "error",
-        9000,
-      );
       return;
     }
 
@@ -182,7 +174,7 @@ export default class DeepSeekMarkdownFormatterPlugin extends Plugin {
       if (!replaced) throw new Error("无法恢复原选区；请重新选择文字后再试。 ");
       showToast(
         isCleanup
-          ? "轻度清理完成；不满意可立即按 Ctrl+Z 撤销。"
+          ? "轻度清理完成，已有格式已保留；不满意可立即按 Ctrl+Z 撤销。"
           : "排版完成；不满意可立即按 Ctrl+Z 撤销。",
         "success",
         5000,

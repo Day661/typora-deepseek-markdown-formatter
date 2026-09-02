@@ -22,6 +22,64 @@ function stripOuterCodeFence(value) {
   return match ? match[1].trim() : text;
 }
 
+const FORMAT_TOKEN_PATTERN = /⟦DSFMT\d{4,}⟧/g;
+
+export function protectMarkdownFormatting(value) {
+  let text = String(value || "");
+  const tokens = [];
+  const protect = (literal) => {
+    const token = `⟦DSFMT${String(tokens.length).padStart(4, "0")}⟧`;
+    tokens.push({ token, literal });
+    return token;
+  };
+
+  const replace = (pattern, replacer = (match) => protect(match)) => {
+    text = text.replace(pattern, replacer);
+  };
+
+  // 代码内容完全不交给模型修改。
+  replace(/(^|\n)(```|~~~)[^\n]*\n[\s\S]*?\n\2(?=\n|$)/g);
+  replace(/`+[^`\n]*`+/g);
+
+  // 保留 Typora 产生的 HTML 富文本标签（颜色、字体、下划线等）。
+  replace(/<!--[\s\S]*?-->|<\/?[A-Za-z][^>]*>/g);
+
+  // 链接和图片只开放可见文字，目标地址及语法保持原样。
+  replace(/(!?\[)([^\]\n]*)(\]\([^\n)]*\))/g, (_match, open, label, close) => (
+    `${protect(open)}${label}${protect(close)}`
+  ));
+  replace(/(!?\[)([^\]\n]*)(\]\[[^\]\n]*\])/g, (_match, open, label, close) => (
+    `${protect(open)}${label}${protect(close)}`
+  ));
+
+  // 锁定块级结构、表格边界、行内格式符、转义符及所有换行。
+  replace(/^\s*\|?(?:\s*:?-{3,}:?\s*\|)+\s*$/gm);
+  replace(/^(\s{0,3}(?:#{1,6}\s+|>\s*|(?:[-+*]|\d+[.)])\s+(?:\[[ xX]\]\s+)?))/gm);
+  replace(/\\[^\s]/g);
+  replace(/\|/g);
+  replace(/\*\*|__|==|~~|\*|_/g);
+  replace(/ {2,}(?=\r?\n)/g);
+  replace(/\r?\n/g);
+
+  const tokenMap = new Map(tokens.map((item) => [item.token, item]));
+  const orderedTokens = (text.match(FORMAT_TOKEN_PATTERN) || []).map((token) => tokenMap.get(token));
+  return { text, tokens: orderedTokens };
+}
+
+export function restoreProtectedFormatting(value, tokens) {
+  let text = String(value || "");
+  const expected = (tokens || []).map(({ token }) => token);
+  const actual = text.match(FORMAT_TOKEN_PATTERN) || [];
+  if (expected.length !== actual.length || expected.some((token, index) => token !== actual[index])) {
+    throw new Error("轻度清理未能完整保留原有格式，已停止覆盖原文。 ");
+  }
+
+  for (const { token, literal } of tokens || []) {
+    text = text.replace(token, literal);
+  }
+  return text;
+}
+
 function characterBigramSimilarity(left, right) {
   const a = Array.from(String(left || "").replace(/\s+/g, ""));
   const b = Array.from(String(right || "").replace(/\s+/g, ""));
@@ -150,11 +208,13 @@ export async function formatMarkdown(selection, apiKey) {
 }
 
 export async function cleanLightly(selection, apiKey) {
+  const protectedSource = protectMarkdownFormatting(selection);
   const result = await transformText(
-    selection,
+    protectedSource.text,
     apiKey,
     CLEANUP_SYSTEM_PROMPT,
     CLEANUP_USER_PROMPT_TEMPLATE,
   );
-  return assertLightCleanup(selection, result);
+  const restored = restoreProtectedFormatting(result, protectedSource.tokens);
+  return assertLightCleanup(selection, restored);
 }
