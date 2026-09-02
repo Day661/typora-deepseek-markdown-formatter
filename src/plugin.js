@@ -154,6 +154,18 @@ export default class DeepSeekMarkdownFormatterPlugin extends Plugin {
       return;
     }
 
+    const protectedFormatting = this.selection.getSavedProtectedFormatting();
+    if (protectedFormatting.length) {
+      const summary = protectedFormatting.slice(0, 5).join("、");
+      this.selection.clear();
+      showToast(
+        `已取消：选区包含已有格式（${summary}）。重新处理会覆盖这些格式；请先在原始文本上完成清理和排版，再做手工格式。`,
+        "error",
+        9000,
+      );
+      return;
+    }
+
     const { apiKey } = this.getSettings();
     if (!apiKey) {
       showToast("请按 Ctrl+. 打开插件设置并填写 DeepSeek API Key。", "error", 5000);
