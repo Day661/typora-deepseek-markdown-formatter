@@ -5,7 +5,7 @@
   "author": "Day661",
   "authorUrl": "https://github.com/Day661",
   "repo": "Day661/typora-deepseek-markdown-formatter",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "minAppVersion": "1.5.0",
   "minCoreVersion": "2.7.1",
   "platforms": ["win32"]

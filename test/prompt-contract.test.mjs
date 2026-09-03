@@ -63,6 +63,9 @@ const requiredCleanupRules = [
   "只补最短必要文字",
   "中文本来就自然省略主语的句子不得强行补全",
   "提纲占位、空白编号和待补内容绝对不得补写",
+  "明显缺失的逗号、顿号、句号或问号",
+  "柜子",
+  "油烟机",
 ];
 
 for (const rule of requiredCleanupRules) {

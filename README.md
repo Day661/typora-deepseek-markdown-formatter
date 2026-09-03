@@ -16,6 +16,7 @@ Minimal DeepSeek-powered Markdown formatter for Typora: select text, press one s
 - 也可以选中文字后右键选择“DeepSeek Markdown 智能排版”。
 - 生成完成后自动覆盖选区，不弹出预览窗口。
 - 覆盖作为一次编辑写入 Typora，完成后可立即按 `Ctrl+Z` 恢复原文。
+- 跨标题、引用、表格和列表的选区通过完整 Markdown 安全写回，不会再把整篇内容误包进引用块或清空右侧大纲。
 - 固定使用 `deepseek-v4-flash`，并关闭思考模式以提高速度。
 - 内置中等结构化排版规则：不改写原文，明确的多对象比较内容优先使用表格，不补全表格空缺。
 
@@ -96,6 +97,7 @@ Minimal DeepSeek-powered Markdown formatter for Typora: select text, press one s
 
 ## 更新记录
 
+- 1.2.4：修复跨块写回后整篇变成引用块、右侧大纲消失及整篇表格选区误报无法恢复的问题；轻度清理增加极确定的基础标点补全。
 - 1.2.3：修复 Windows Typora 原生 Markdown 选区读取，轻度清理不再退回纯文本；读取失败时保持原文，并固定每次发布只保留最新版本。
 - 1.2.2：轻度清理改用 Typora 原生选区 Markdown，并锁定已有格式与换行；智能排版仍允许重新组织格式。
 - 1.2.1：检测选区已有格式并阻止再次处理，避免覆盖用户后续添加的手工样式。
